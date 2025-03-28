@@ -6,7 +6,7 @@ from openai import OpenAI
 from datetime import datetime
 
 # Setup
-openai_key = st.secrets["OpenAI"]["OPENAI_API_KEY"]
+openai_key = st.secrets["OPENAI_API_KEY"]
 client = OpenAI(api_key=openai_key)
 
 # Email settings
