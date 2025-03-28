@@ -4,6 +4,8 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from openai import OpenAI
 from datetime import datetime
+import json
+from azure.storage.blob import BlobServiceClient
 
 # Setup
 openai_key = st.secrets["OPENAI_API_KEY"]
@@ -15,8 +17,18 @@ EMAIL_PASSWORD = st.secrets["email"]["password"]
 SMTP_SERVER = st.secrets["email"]["smtp_server"]
 SMTP_PORT = st.secrets["email"]["smtp_port"]
 
+#Blob information 
+azure_conn_str = st.secrets["azure_blob"]["connection_string"]
+container_name = st.secrets["azure_blob"]["container_name"]
+
 # Calendly Link
 CALENDLY_LINK = "https://calendly.com/chris-gambill-gambilldataengineering/data-consulting-initial-meeting"
+
+def upload_to_azure_blob(data, filename):
+    blob_service = BlobServiceClient.from_connection_string(azure_conn_str)
+    blob_client = blob_service.get_blob_client(container=container_name, blob=filename)
+    blob_client.upload_blob(json.dumps(data, indent=2), overwrite=True)
+
 
 # --- PAGE SETUP ---
 st.set_page_config(page_title="Client Discovery + Onboarding", layout="centered")
@@ -139,3 +151,17 @@ if st.session_state.followup_done:
     st.markdown("### 🎯 Final Step: Book Your Discovery Call")
     st.markdown(f"[📅 Schedule Now]({CALENDLY_LINK})", unsafe_allow_html=True)
 
+    result = {
+        "timestamp": datetime.now().isoformat(),
+        "request": {
+            "name": name,
+            "email": email,
+            "company": company,
+            "industry": industry,
+            "goals": goals,
+            "services": ", ".join(services), 
+            "interests": chat_log
+        } }
+    
+    filename = f"new_client_{name.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d%H%M%S')}.json"
+    upload_to_azure_blob(result, filename)
