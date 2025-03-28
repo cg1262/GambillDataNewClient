@@ -162,6 +162,6 @@ if st.session_state.followup_done:
             "services": ", ".join(services), 
             "interests": chat_log
         } }
-    
+    st.markedown(result)
     filename = f"new_client_{name.replace(' ', '_')}_{datetime.now().strftime('%Y%m%d%H%M%S')}.json"
     upload_to_azure_blob(result, filename)
